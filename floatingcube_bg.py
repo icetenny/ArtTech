@@ -2,21 +2,32 @@ import pygame
 import random
 import math
 import time
+import cv2
 from ghost import Ghost, AllGhost
 from attractor import Attractor
+
 # Initialize Pygame
 pygame.init()
 
-# Constants for the window
-WINDOW_WIDTH = 800
-WINDOW_HEIGHT = 600
 
-# Colors
-BACKGROUND = (0, 0, 0)
+video = cv2.VideoCapture("pic/bg2.mp4")
+success, video_image = video.read()
+fps = video.get(cv2.CAP_PROP_FPS)
+print("fps:", fps)
 
 clock = pygame.time.Clock()
 
+# Constants for the window
+WINDOW_WIDTH = video.get(3)
+WINDOW_HEIGHT = video.get(4)
+
+# WINDOW_WIDTH = 800
+# WINDOW_HEIGHT = 600
+
+# Colors
+# BACKGROUND = (0, 0, 0)
 start_time = time.time()
+
 # Create the window
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Floating Ghosts")
@@ -25,12 +36,16 @@ attractor = Attractor()
 
 ghosts = AllGhost(screen=screen, window_size=(WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor)
 
-ghosts.add_ghost(img="pic/ghost1.png", size=80, speed=0.05)
-# ghosts.add_ghost(img="pic/ghost2-1.png", size=60, speed=0.035)
+ghosts.add_ghost(img="pic/ghost1.png", size=80, speed=5)
+ghosts.add_ghost(img="pic/ghost2-1.png", size=75, speed=8)
+ghosts.add_ghost(img="pic/ghost3.png", size=85, speed=4.5)
+ghosts.add_ghost(img="pic/kitty.png", size=90, speed=2.5)
 
 # Main game loop
 running = True
 while running:
+    clock.tick(fps)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -45,7 +60,15 @@ while running:
             attractor.pos = event.pos  # Update circle position based on mouse cursor
 
     # Fill the background
-    screen.fill(BACKGROUND)
+    success, video_image = video.read()
+    if success:
+        video_surf = pygame.image.frombuffer(
+            video_image.tobytes(), video_image.shape[1::-1], "BGR")
+    else:
+        video.set(cv2.CAP_PROP_POS_FRAMES, 0)
+        success, video_image = video.read()
+    screen.blit(video_surf, (0, 0))
+    # screen.fill(BACKGROUND)
 
     # Move and draw each ghost
     ghosts.runall()
@@ -55,13 +78,9 @@ while running:
         pygame.draw.circle(screen, (0, 255, 100), attractor.pos, 5)
 
     # Update the display
-    pygame.display.update()
+    # pygame.display.update()
+    pygame.display.flip()
 
-    dt = time.time() - start_time
-    if dt > 0:
-        fps = 1 / (time.time() - start_time)
-        start_time = time.time()
-        print("FPS: {:.2f}".format(fps))
 
 # Quit Pygame
 pygame.quit()
