@@ -5,10 +5,19 @@ import time
 import cv2
 from ghost import Ghost, AllGhost
 from attractor import Attractor
+from custom_socket import CustomSocket
+import socket
+import json
+import traceback
 
 # Initialize Pygame
 pygame.init()
 
+HOST = socket.gethostname()
+PORT = 10011
+
+server = CustomSocket(HOST, PORT)
+server.startServer()
 
 video = cv2.VideoCapture("pic/bg2.mp4")
 success, video_image = video.read()
@@ -41,10 +50,35 @@ ghosts.add_ghost(img="pic/ghost2-1.png", size=75, speed=8)
 ghosts.add_ghost(img="pic/ghost3.png", size=85, speed=4.5)
 ghosts.add_ghost(img="pic/kitty.png", size=90, speed=2.5)
 
+
+client_connected = False
+
 # Main game loop
 running = True
 while running:
     clock.tick(fps)
+
+    if not client_connected:
+        try:
+            conn, addr = server.sock.accept()
+            client_connected = True
+            print("client connected")
+        except:
+            print("No client connect")
+            pass
+    else:
+        try:
+            # data = server.sock.recv(1024).decode('utf-8')
+            data = server.recvMsg(conn)
+            # data = json.loads(server.recvMsg(conn).decode('utf-8'))
+            print(data)
+        except Exception as e:
+            # client_connected = False
+            pass
+            # traceback.print_exc()
+            print(e)
+            # print("Connection Closed")
+
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

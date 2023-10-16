@@ -35,8 +35,12 @@ class Ghost():
         self.size = size
         # Rect = show coord
         self.rect = self.original_image.get_rect()
-        self.rect.x = random.randint(0, self.window_width - self.rect.width)
-        self.rect.y = random.randint(0, self.window_height - self.rect.height)
+        # Random
+        # self.rect.x = random.randint(0, self.window_width - self.rect.width)
+        # self.rect.y = random.randint(0, self.window_height - self.rect.height)
+
+        # Set spawn point
+        self.rect.x, self.rect.y = (10,10)
         # Coord = Real coord
         self.coord = [self.rect.x, self.rect.y]
 
@@ -64,6 +68,7 @@ class Ghost():
         self.move()
         # self.draw_goal_point()
         self.draw()
+
     def change_status(self, new_status):
         if self.status != new_status:
             self.status = new_status
@@ -141,7 +146,8 @@ class Ghost():
         self.status_counter += 1
 
     def draw(self):
-        self.screen.blit(self.show_image, (self.rect.x - self.size//2, self.rect.y - self.size//2))
+        self.screen.blit(self.show_image, (self.rect.x -
+                         self.size//2, self.rect.y - self.size//2))
 
     def draw_goal_point(self):
         pygame.draw.circle(self.screen, (0, 0, 255), self.goal_point, 5)
