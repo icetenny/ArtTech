@@ -40,11 +40,10 @@ class CustomSocket :
 
 	def sendMsg(self,sock,msg) :
 		temp = msg
-		try :
+		try:
 			temp = msg.encode('utf-8')
-		except Exception as e :
-			# This message is an image
-			print("[IMAGE SENT THROUGH SOCKET]")
+		except:
+			pass
 		msg = struct.pack('>I', len(msg)) + temp
 		sock.sendall(msg)
 
@@ -66,8 +65,8 @@ class CustomSocket :
 
 		return self.recvall(sock, msgLen)
 
-	def req(self,image) :
-		self.sendMsg(self.sock,image.tobytes())
+	def req(self,msg) :
+		self.sendMsg(self.sock,msg.encode("utf-8"))
 		result = self.recvMsg(self.sock)
 		result = result.decode('utf-8')
 		return json.loads(result)

@@ -5,6 +5,7 @@ import time
 from custom_socket import CustomSocket
 import socket
 import cv2
+import json
 # Initialize Pygame
 pygame.init()
 
@@ -20,17 +21,12 @@ port = 10011
 c = CustomSocket(host, port)
 c.clientConnect()
 
-# while True:
-#     # input()
-#     c.sendMsg(c.sock, str(i).encode("utf-8"))
-#     print("sending", i)
-#     i += 1
-#     # time.sleep(1)
-
-
 # Initialize the screen
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Spawn GUI")
+clock = pygame.time.Clock()
+fps = 30
+
 
 # Fonts
 font = pygame.font.Font(None, 36)
@@ -140,13 +136,18 @@ def main():
     # size_min, size_max = 50, 200
 
     while running:
+        clock.tick(fps)
         screen.fill(BG_COLOR)
+
+        out = dict()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
             elif event.type == pygame.MOUSEBUTTONDOWN:
                 clicked_id = np_screen.screen[event.pos[0], event.pos[1]]
+
+
             elif event.type == pygame.MOUSEBUTTONUP:
                 clicked_id = 0
                 np_screen.update()
@@ -154,22 +155,19 @@ def main():
             if clicked_id == 1:
                 slider2.set_value(0.5)
                 slider3.set_value(0.5)
-                print("Button clicked")
-                data = pygame.image.tostring(img_show, "RGBA")
-                send_size = img_show.get_size()
-                print(data)
 
-                out = dict()
-                out["size"] = send_size
-                out["speed"] = speed
-                out["img"] = data
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    print("Button clicked")
+                    # data = pygame.image.tostring(img_show, "RGBA")
+                    data = np.dstack((pygame.surfarray.array3d(img_show), pygame.surfarray.array_alpha(img_show)))
+                    # print(data.shape)
 
-                image_surface = pygame.image.fromstring(data, send_size, 'RGBA')
-                # print(image_surface.get_size())
+                    send_size = img_show.get_size()[0]
 
-                # blit_center(screen, image_surface, (0,0))
-                # time.sleep(2)
-                c.sendMsg(c.sock, "sendiddinng".encode("utf-8"))
+                    out["size"] = send_size
+                    out["speed"] = speed
+                    out["img"] = data.tolist()
+
 
             elif clicked_id == 2:
                 slider2.update_value(event.pos[0])
@@ -179,23 +177,21 @@ def main():
 
         size_show = slider2.value
         speed = slider3.value
-        # print(speed)
 
         size_show = int(map_value(size_show, 50, 120))
         speed = map_value(speed, 2, 10)
 
         img_show = pygame.transform.scale(
             pygame.image.load("pic/ghost3.png"), (size_show, size_show))
-        # print(img_show.get_size())
-
-
+  
+        data = c.req(json.dumps(out))
 
         np_screen.draw_all_elements()
 
         blit_center(screen=screen, image=img_show, position=(200,100))
 
-
         pygame.display.flip()
+
 
     pygame.quit()
     sys.exit()

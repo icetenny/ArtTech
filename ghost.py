@@ -3,6 +3,7 @@ import random
 import math
 import time
 from attractor import Attractor
+import numpy as np
 
 
 class AllGhost():
@@ -12,8 +13,8 @@ class AllGhost():
         self.attractor = attractor
         self.ghosts = []
 
-    def add_ghost(self, img="", size=50, speed=0.2):
-        ghost = Ghost(AllGhost=self, img=img, size=size, speed=speed)
+    def add_ghost(self, img="",img_path="", size=50, speed=0.2):
+        ghost = Ghost(AllGhost=self, img=img, img_path=img_path, size=size, speed=speed)
         self.ghosts.append(ghost)
 
     def runall(self):
@@ -22,16 +23,27 @@ class AllGhost():
 
 
 class Ghost():
-    def __init__(self, AllGhost=AllGhost(), img="", size=50, speed=0.2):
+    def __init__(self, AllGhost, img="", img_path="", size=50, speed=0.2):
         self.screen = AllGhost.screen
         self.window_width, self.window_height = AllGhost.window_size
         self.attractor = AllGhost.attractor
 
-        self.original_image = pygame.transform.scale(
-            pygame.image.load(img), (size, size))
+        if img != "":
+            shape = img.shape
+            surface = pygame.Surface(shape[0:2], pygame.SRCALPHA, 32)
+            pygame.pixelcopy.array_to_surface(surface, img[:,:,0:3])
+            surface_alpha = np.array(surface.get_view('A'), copy=False)
+            surface_alpha[:,:] = img[:,:,3]
+            self.original_image = pygame.transform.scale(
+                surface, (size, size))
+        else:
+            self.original_image = pygame.transform.scale(
+                pygame.image.load(img_path), (size, size))
+
         self.flip_image = pygame.transform.flip(
             self.original_image, True, False)
         self.show_image = self.original_image.copy()
+
         self.size = size
         # Rect = show coord
         self.rect = self.original_image.get_rect()
@@ -83,8 +95,8 @@ class Ghost():
             self.show_image = self.original_image
 
     def generate_new_goal(self):
-        self.goal_point = (random.randint(self.rect.width, self.window_width - self.rect.width),
-                           random.randint(self.rect.height, self.window_height - self.rect.height))
+        self.goal_point = (random.randint(self.rect.width // 2, self.window_width - self.rect.width // 2),
+                           random.randint(self.rect.height // 2, self.window_height - self.rect.height // 2))
         self.detect_change_dir()
         return self.goal_point
 

@@ -9,6 +9,7 @@ from custom_socket import CustomSocket
 import socket
 import json
 import traceback
+import numpy as np
 
 # Initialize Pygame
 pygame.init()
@@ -45,10 +46,10 @@ attractor = Attractor()
 
 ghosts = AllGhost(screen=screen, window_size=(WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor)
 
-ghosts.add_ghost(img="pic/ghost1.png", size=80, speed=5)
-ghosts.add_ghost(img="pic/ghost2-1.png", size=75, speed=8)
-ghosts.add_ghost(img="pic/ghost3.png", size=85, speed=4.5)
-ghosts.add_ghost(img="pic/kitty.png", size=90, speed=2.5)
+ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5)
+ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8)
+ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5)
+ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5)
 
 
 client_connected = False
@@ -56,7 +57,7 @@ client_connected = False
 # Main game loop
 running = True
 while running:
-    clock.tick(fps)
+    clock.tick(fps) 
 
     if not client_connected:
         try:
@@ -64,20 +65,27 @@ while running:
             client_connected = True
             print("client connected")
         except:
-            print("No client connect")
+            # print("No client connect")
             pass
     else:
         try:
-            # data = server.sock.recv(1024).decode('utf-8')
-            data = server.recvMsg(conn)
-            # data = json.loads(server.recvMsg(conn).decode('utf-8'))
-            print(data)
+            data = json.loads(server.recvMsg(conn))
+            if data:
+                print(data)
+                size = data["size"]
+                speed = data["speed"]
+                image = np.array(data["img"])
+ 
+                ghosts.add_ghost(img=image, size=size, speed=speed)
+
+            server.sendMsg(conn, json.dumps("message received"))
+
         except Exception as e:
             # client_connected = False
-            pass
             # traceback.print_exc()
             print(e)
-            # print("Connection Closed")
+            print("Connection Closed")
+            client_connected = False
 
 
     for event in pygame.event.get():
