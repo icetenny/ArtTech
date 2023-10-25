@@ -6,6 +6,7 @@ from custom_socket import CustomSocket
 import socket
 import cv2
 import json
+from ghost import ShowGhost
 # Initialize Pygame
 pygame.init()
 
@@ -117,7 +118,7 @@ def main():
 
     np_screen = NP_Screen((SCREEN_WIDTH, SCREEN_HEIGHT))
 
-    button1 = Button(id=1, position=(150, 400, 100, 40))
+    button1 = Button(id=1, position=(150, 450, 100, 40))
     np_screen.add_element(button1)
 
     slider2 = Slider(id=2, position=(50, 250, 300, 10), color=(
@@ -128,69 +129,87 @@ def main():
         255, 240, 240), slider_size=(30, 20), slider_color=(100, 20, 20))
     np_screen.add_element(slider3)
 
+    button4 = Button(id=4, position=(150, 350, 100, 40), color=(50,50,150))
+    np_screen.add_element(button4)
+
+    button5 = Button(id=5, position=(150, 400, 100, 40), color=(200,200,0))
+    np_screen.add_element(button5)
+
     clicked_id = 0
     # last_clicked_id = 0
 
-    img_ori = pygame.image.load("pic/ghost3.png")
+    img_ori = pygame.image.load("pic/pol_out.png")
+    img_show = img_ori.copy()
+
+    show_ghost = ShowGhost(screen, (SCREEN_WIDTH, SCREEN_HEIGHT), img_path="pic/pol_out.png")
     
     # size_min, size_max = 50, 200
 
     while running:
-        clock.tick(fps)
-        screen.fill(BG_COLOR)
+        try:
+            clock.tick(fps)
+            screen.fill(BG_COLOR)
 
-        out = dict()
+            out = dict()
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                running = False
-            elif event.type == pygame.MOUSEBUTTONDOWN:
-                clicked_id = np_screen.screen[event.pos[0], event.pos[1]]
+            
 
+            for event in pygame.event.get():
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+                # print(clicked_id)
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    clicked_id = 0
+                    np_screen.update()
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    clicked_id = np_screen.screen[mouse_x, mouse_y]
 
-            elif event.type == pygame.MOUSEBUTTONUP:
-                clicked_id = 0
-                np_screen.update()
+                    if clicked_id == 1:
+                        slider2.set_value(0.5)
+                        slider3.set_value(0.5)
+                        print("Button clicked")
+                        send_image =  pygame.transform.scale(show_ghost.original_image, (size_show, size_show))
+                        data = np.dstack((pygame.surfarray.array3d(send_image), pygame.surfarray.array_alpha(send_image)))
+                        print(data)
 
-            if clicked_id == 1:
-                slider2.set_value(0.5)
-                slider3.set_value(0.5)
-
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    print("Button clicked")
-                    # data = pygame.image.tostring(img_show, "RGBA")
-                    data = np.dstack((pygame.surfarray.array3d(img_show), pygame.surfarray.array_alpha(img_show)))
-                    # print(data.shape)
-
-                    send_size = img_show.get_size()[0]
-
-                    out["size"] = send_size
-                    out["speed"] = speed
-                    out["img"] = data.tolist()
-
-
-            elif clicked_id == 2:
-                slider2.update_value(event.pos[0])
-            elif clicked_id == 3:
-                slider3.update_value(event.pos[0])
+                        out["size"] = size_show
+                        out["speed"] = speed
+                        out["img"] = data.tolist()
+                        
+                    elif clicked_id == 4:
+                        show_ghost.flip_image(axis=0)
+                    elif clicked_id == 5:
+                        show_ghost.flip_image(axis=1)
 
 
-        size_show = slider2.value
-        speed = slider3.value
+                if clicked_id == 2:
+                    slider2.update_value(mouse_x)
+                elif clicked_id == 3:
+                    slider3.update_value(mouse_x)
 
-        size_show = int(map_value(size_show, 50, 120))
-        speed = map_value(speed, 2, 10)
 
-        img_show = pygame.transform.scale(
-            pygame.image.load("pic/ghost3.png"), (size_show, size_show))
-  
-        data = c.req(json.dumps(out))
+            # size_show = slider2.value
+            # speed = slider3.value
 
-        np_screen.draw_all_elements()
+            size_show = int(map_value(slider2.value, 50, 120))
+            speed = map_value(slider3.value, 2, 10)
 
-        blit_center(screen=screen, image=img_show, position=(200,100))
+            # img_show = pygame.transform.scale(img_ori, (size_show, size_show))
+    
+            data = c.req(json.dumps(out))
 
-        pygame.display.flip()
+            np_screen.draw_all_elements()
+
+            # blit_center(screen=screen, image=img_show, position=(200,100))
+            show_ghost.change_size(new_size=size_show)
+            show_ghost.change_speed(new_speed=speed)
+            show_ghost.run()
+
+            pygame.display.flip()
+        
+        except Exception as e:
+            print(f"An exception occurred: {e}")
 
 
     pygame.quit()

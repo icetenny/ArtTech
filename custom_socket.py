@@ -34,7 +34,7 @@ class CustomSocket :
 			self.sock.connect((self.host,self.port))
 			print("[SOCKET CLIENT CONNECTED TO "+str(self.host)+" "+str(self.port)+"]")
 		except Exception as e :
-			print("Error :",e)
+			# print("Error :",e)
 			return False
 		return True
 

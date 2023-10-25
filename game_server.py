@@ -41,10 +41,11 @@ start_time = time.time()
 # Create the window
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("Floating Ghosts")
+print(f"Width:{WINDOW_WIDTH} , Height:{WINDOW_HEIGHT}")
 
 attractor = Attractor()
 
-ghosts = AllGhost(screen=screen, window_size=(WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor)
+ghosts = AllGhost(screen=screen, window_size=(WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor, max_ghosts=5)
 
 ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5)
 ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8)
@@ -69,9 +70,10 @@ while running:
             pass
     else:
         try:
+            # Receive ghost from spawn gui
             data = json.loads(server.recvMsg(conn))
             if data:
-                print(data)
+                # print(data)
                 size = data["size"]
                 speed = data["speed"]
                 image = np.array(data["img"])
@@ -95,6 +97,9 @@ while running:
             if event.button == 1:  # Left mouse button
                 attractor.pos = event.pos
                 attractor.is_active = True
+
+                # ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8)
+                
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:  # Left mouse button
                 attractor.is_active = False
