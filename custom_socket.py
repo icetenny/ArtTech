@@ -13,7 +13,7 @@ class CustomSocket :
 		# self.sock.setblocking(0)
 		self.isServer = False
 
-	def startServer(self) :
+	def startServer(self, timeout=0) :
 		try :
 			# solve address already in use error
 			# https://python-list.python.narkive.com/Y15bAxfI/socket-unbind-or-socket-unlisten-socket-error-48-address-already-in-use
@@ -21,9 +21,10 @@ class CustomSocket :
 			self.sock.bind((self.host,self.port))
 			self.sock.listen(5)
 			# self.sock.setblocking(1000)
-			self.sock.settimeout(0)
+			if timeout >= 0:
+				self.sock.settimeout(timeout)
 			self.isServer = True
-			print("[SOCKET SERVER START AT PORT "+str(self.port)+"]")
+			print(f"[SOCKET SERVER START AT HOST {self.host} | PORT {self.port}]")
 		except Exception as e :
 			print("Error :",e)
 			return False
@@ -32,7 +33,16 @@ class CustomSocket :
 	def clientConnect(self) :
 		try :
 			self.sock.connect((self.host,self.port))
-			print("[SOCKET CLIENT CONNECTED TO "+str(self.host)+" "+str(self.port)+"]")
+			print(f"[SOCKET CLIENT CONNECTED TO HOST {self.host} | PORT {self.port}]")
+		except Exception as e :
+			# print("Error :",e)
+			return False
+		return True
+	
+	def clientDisconnect(self):
+		try :
+			self.sock.close()
+			print(f"[DISCONNECT FROM HOST {self.host} | PORT {self.port}]")
 		except Exception as e :
 			# print("Error :",e)
 			return False

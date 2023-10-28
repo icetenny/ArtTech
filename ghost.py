@@ -34,7 +34,7 @@ class AllGhost():
 
 
 class Ghost():
-    def __init__(self, AllGhost, img="", img_path="", size=50, speed=5):
+    def __init__(self, AllGhost, img="", img_path="", size=50, speed=5, effect=0):
         self.screen = AllGhost.screen
         self.window_width, self.window_height = AllGhost.window_size
         self.attractor = AllGhost.attractor
