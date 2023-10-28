@@ -33,6 +33,8 @@ pygame.display.set_caption("Spawn GUI")
 clock = pygame.time.Clock()
 fps = 30
 
+icon = pygame.image.load("pic/vavsa_logo_2.png")
+pygame.display.set_icon(icon)
 
 # Fonts
 font = pygame.font.Font(None, 36)
@@ -159,7 +161,6 @@ np_screen.add_element(button7)
 
 
 clicked_id = 0
-# last_clicked_id = 0
 
 show_ghost = ShowGhost(screen, (SCREEN_WIDTH, SCREEN_HEIGHT), img_path="pic/pol_out.png")
 ui_is_active = False
@@ -177,29 +178,23 @@ while running:
         try:
             game_server_connected = client_game.clientConnect()
         except Exception as e:
-            # print(e)
             print("Game server not connected")
 
     if not cam_server_connected:
         try:
             cam_server_connected = client_cam.clientConnect()
         except Exception as e:
-            # print(e)
             print("Cam server not connected")
 
     try:
-        # screen.fill(BG_COLOR)
-        # print("here")
         screen.blit(ui_bg, (0,0))
 
         game_out = dict()
         cam_out = dict()
 
-        # cv2.imshow("cam", frame)
-
         for event in pygame.event.get():
             mouse_x, mouse_y = pygame.mouse.get_pos()
-            print(mouse_x, mouse_y)
+            # print(mouse_x, mouse_y)
             if event.type == pygame.QUIT:
                 running = False
                 break
@@ -238,14 +233,8 @@ while running:
             elif clicked_id == 3:
                 slider3.update_value(mouse_x)
 
-
-        # size_show = slider2.value
-        # speed = slider3.value
-
         size_show = int(map_value(slider2.value, 50, 120))
         speed = map_value(slider3.value, 2, 10)
-
-        # img_show = pygame.transform.scale(img_ori, (size_show, size_show))
 
         if cam_server_connected:
             try:
@@ -278,7 +267,6 @@ while running:
             show_ghost.run()
         else:
             blit_center(screen=screen, image=cam_icon, position=(155,208))
-
 
         pygame.display.flip()
     

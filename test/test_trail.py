@@ -1,5 +1,6 @@
 import pygame
 import sys
+import numpy as np
 
 # Initialize pygame
 pygame.init()
@@ -18,6 +19,37 @@ image = pygame.transform.scale(image, (50, 50))  # Resize the image if needed
 
 # List to store previous positions for the trail effect
 trail_positions = []
+
+
+def trail_effect(color=(0,0,0), max_alpha=255):
+    width, height = image.get_width(), image.get_height()
+    alpha_array = pygame.surfarray.array_alpha(image)
+    mask_array = np.zeros((*alpha_array.shape,4), dtype="uint8")
+    mask_array[alpha_array > 0] = (*color, 255)
+
+    mask = pygame.surfarray.make_surface(mask_array)
+
+    # Fill the new surface with a black color
+    # mask.fill(color)
+
+    # Use the image as a mask on the black surface
+    # mask.blit(image, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
+
+    for i, (x, y) in enumerate(trail_positions):
+        alpha = int(max_alpha * (i / len(trail_positions)))
+
+        # Scale the image based on the position in the trail
+        scale_factor = (i / len(trail_positions))
+        current_mask = pygame.transform.scale(mask, (int(image.get_width() * scale_factor), int(image.get_height() * scale_factor)))
+        current_mask.set_alpha(alpha)
+
+        # trail_image = image.copy()
+        # trail_image.fill((*color, alpha), None, pygame.BLEND_RGBA_MULT)
+
+        image_rect = current_mask.get_rect()
+        image_rect.center = (x, y)
+        screen.blit(current_mask, image_rect)
+
 
 # Main game loop
 running = True
@@ -40,20 +72,9 @@ while running:
     # Fill the screen with a background color
     screen.fill((0, 255, 255))
 
-    for i, (x, y) in enumerate(trail_positions):
-        alpha = int(255 * (i / len(trail_positions)))
+    trail_effect(color=(255,0,0), max_alpha=255)
 
-        # Scale the image based on the position in the trail
-        scale_factor = (i / len(trail_positions))
-        trail_image = pygame.transform.scale(image, (int(image.get_width() * scale_factor), int(image.get_height() * scale_factor)))
-        trail_image.set_alpha(alpha)
-
-        # trail_image = image.copy()
-        trail_image.fill((0, 0, 0, alpha), None, pygame.BLEND_RGBA_MULT)
-
-        image_rect = trail_image.get_rect()
-        image_rect.center = (x, y)
-        screen.blit(trail_image, image_rect)
+    
 
     # Draw the main image at the current mouse cursor position
     image_rect = image.get_rect()
