@@ -15,8 +15,9 @@ class AllGhost():
         self.dying_ghosts = []
         self.max_ghosts = max_ghosts
 
-    def add_ghost(self, img="",img_path="", size=50, speed=0.2):
-        ghost = Ghost(AllGhost=self, img=img, img_path=img_path, size=size, speed=speed)
+    def add_ghost(self, img="", img_path="", size=50, speed=0.2, effect=0):
+        ghost = Ghost(AllGhost=self, img=img, img_path=img_path,
+                      size=size, speed=speed, effect=effect)
         self.ghosts.append(ghost)
 
         if len(self.ghosts) > self.max_ghosts:
@@ -26,7 +27,7 @@ class AllGhost():
     def runall(self):
         for ghost in self.ghosts:
             ghost.run()
-            
+
         for dying_ghost in self.dying_ghosts:
             if dying_ghost.dead:
                 self.dying_ghosts.remove(dying_ghost)
@@ -42,25 +43,26 @@ class Ghost():
         if isinstance(img, np.ndarray):
             shape = img.shape
             surface = pygame.Surface(shape[0:2], pygame.SRCALPHA, 32)
-            pygame.pixelcopy.array_to_surface(surface, img[:,:,0:3])
+            pygame.pixelcopy.array_to_surface(surface, img[:, :, 0:3])
             surface_alpha = np.array(surface.get_view('A'), copy=False)
-            surface_alpha[:,:] = img[:,:,3]
+            surface_alpha[:, :] = img[:, :, 3]
             self.original_image = pygame.transform.scale(
                 surface, (size, size))
         else:
             self.original_image = pygame.transform.scale(
                 pygame.image.load(img_path), (size, size))
 
-        self.flip_image = pygame.transform.flip(
-            self.original_image, True, False)
+        # self.flip_image = pygame.transform.flip(
+        #     self.original_image, True, False)
+        self.is_flipped = False
         self.show_image = self.original_image.copy()
 
         self.size = size
 
         # Set spawn point
-        self.spawn_point = (10,10)
+        self.spawn_point = (0, self.window_height)
         # Set dying point
-        self.dying_point = (950,530)
+        self.dying_point = (self.window_width, self.window_height)
         self.dead = False
 
         # Rect = show coord
@@ -74,16 +76,31 @@ class Ghost():
         self.goal_point = (0, 0)
         self.generate_new_goal()
 
+        # self.wobble_x = random.uniform(0, 6.28)
+        # self.wobble_offset = 0.002 * 100
+        # self.wobble_range = 8
         self.wobble_x = random.uniform(0, 6.28)
-        self.wobble_offset = 0.002 * 100
-        self.wobble_range = 8
+        self.wobble_offset = random.uniform(0.1, 0.4)
+        self.wobble_range = random.uniform(4,10)
 
         # Status : "move_to_goal", "pause", "follow", "dying"
         self.status = "move_to_goal"
         self.status_counter = 0
         self.last_change_time = time.time()
 
-        self.pause_time = 2
+        self.pause_time = random.uniform(2,4)
+
+        self.effect = effect
+
+        # Effect 1 : Trail
+        self.trail_positions = []
+        self.max_trail = 20
+
+        # Effect 2 : Size wobble
+        self.size_step = 0
+        self.original_size = self.size
+        self.wobble_ratio = 0.2
+
 
     def coord_to_rect(self):
         self.rect.x, self.rect.y = self.coord
@@ -91,6 +108,9 @@ class Ghost():
     def run(self):
         self.move()
         # self.draw_goal_point()
+        if self.effect == 1:
+            self.trail_effect(max_alpha=128)
+
         self.draw()
 
     def change_status(self, new_status):
@@ -102,8 +122,10 @@ class Ghost():
     def detect_change_dir(self):
         dx = self.goal_point[0] - self.coord[0]
         if dx > 0:
-            self.show_image = self.flip_image
+            self.is_flipped = True
+            self.show_image = self.flip(self.original_image)
         elif dx < 0:
+            self.is_flipped = False
             self.show_image = self.original_image
 
     def generate_new_goal(self):
@@ -136,13 +158,22 @@ class Ghost():
         self.wobble_x += self.wobble_offset
         self.rect.y = self.coord[1] + \
             math.sin(self.wobble_x) * self.wobble_range
+        
+    def size_wobble(self):
+        self.size_step += 0.1
+        self.size = self.original_size+ \
+            math.sin(self.size_step) * (self.original_size * self.wobble_ratio)
+        
+        if self.is_flipped:
+            self.show_image = self.scale(self.flip(self.original_image))
+        else:
+            self.show_image = self.scale(self.original_image)
 
     def move(self):
         if self.status == "dying":
             self.goal_point = self.dying_point
             self.move_towards_goal()
             self.detect_change_dir()
-
 
         elif self.attractor.is_active:
             self.change_status("follow")
@@ -165,6 +196,11 @@ class Ghost():
 
         self.wobble()
 
+        if self.effect == 1:
+            self.append_trail()
+        elif self.effect == 2:
+            self.size_wobble()
+
         self.status_counter += 1
 
     def draw(self):
@@ -173,6 +209,43 @@ class Ghost():
 
     def draw_goal_point(self):
         pygame.draw.circle(self.screen, (0, 0, 255), self.goal_point, 5)
+
+    def append_trail(self):
+        self.trail_positions.append((self.rect.x, self.rect.y))
+        if len(self.trail_positions) > self.max_trail:
+            self.trail_positions.pop(0)
+
+    def color_mask(self, color):
+        mask_surface = self.show_image.copy()
+        mask_surface.fill(color)
+        surface_alpha = np.array(mask_surface.get_view('A'), copy=False)
+        surface_alpha[:, :] = pygame.surfarray.array_alpha(self.show_image)
+        return mask_surface
+
+    def trail_effect(self, color=(0, 0, 0), max_alpha=255):
+        mask = self.color_mask(color=color)
+        for i, (x, y) in enumerate(self.trail_positions):
+            alpha = int(max_alpha * (i / len(self.trail_positions)))
+
+            # Scale the image based on the position in the trail
+            scale_factor = (i / len(self.trail_positions))
+            current_mask = pygame.transform.scale(mask, (int(self.show_image.get_width(
+            ) * scale_factor), int(self.show_image.get_height() * scale_factor)))
+            current_mask.set_alpha(alpha)
+
+            image_rect = current_mask.get_rect()
+            image_rect.center = (x, y)
+            self.screen.blit(current_mask, image_rect)
+    def scale(self, surface, size=0):
+        if size == 0:
+            return pygame.transform.scale(surface, (self.size, self.size))
+        else:
+            return pygame.transform.scale(surface, (size, size))
+        
+    def flip(self, surface):
+        return pygame.transform.flip(
+            surface, True, False)
+
 
 
 class ShowGhost():
@@ -184,23 +257,22 @@ class ShowGhost():
         if isinstance(img, np.ndarray):
             shape = img.shape
             surface = pygame.Surface(shape[0:2], pygame.SRCALPHA, 32)
-            pygame.pixelcopy.array_to_surface(surface, img[:,:,0:3])
+            pygame.pixelcopy.array_to_surface(surface, img[:, :, 0:3])
             surface_alpha = np.array(surface.get_view('A'), copy=False)
-            surface_alpha[:,:] = img[:,:,3]
+            surface_alpha[:, :] = img[:, :, 3]
             self.original_image = surface
         else:
             self.original_image = pygame.image.load(img_path)
 
         self.show_image = pygame.transform.scale(
-                self.original_image, (size, size))
+            self.original_image, (size, size))
         self.is_flip = False
 
         self.size = size
 
         self.speed = speed
-        self.goal_points = [(153,120), (84, 203), (151, 300) ,(224, 206)]
+        self.goal_points = [(153, 120), (84, 203), (151, 300), (224, 206)]
         self.goal_point = self.goal_points[0]
-
 
         # Rect = show coord
         self.rect = self.original_image.get_rect()
@@ -238,11 +310,13 @@ class ShowGhost():
         dx = self.goal_point[0] - self.coord[0]
         if dx > 0:
             self.is_flip = True
-            self.show_image = pygame.transform.flip(pygame.transform.scale(self.original_image, (self.size, self.size)), True, False)
+            self.show_image = pygame.transform.flip(pygame.transform.scale(
+                self.original_image, (self.size, self.size)), True, False)
             # print("flip")
         elif dx < 0:
             self.is_flip = False
-            self.show_image = pygame.transform.scale(self.original_image, (self.size, self.size))
+            self.show_image = pygame.transform.scale(
+                self.original_image, (self.size, self.size))
             # print("no flip")
 
     def next_goal(self):
@@ -298,16 +372,17 @@ class ShowGhost():
     def draw_goal_point(self):
         pygame.draw.circle(self.screen, (0, 0, 255), self.goal_point, 5)
 
-
     def change_size(self, new_size):
         self.size = new_size
         # self.original_image = pygame.transform.scale(self.original_image, (self.size, self.size))
         if self.is_flip:
-            self.show_image = pygame.transform.flip(pygame.transform.scale(self.original_image, (self.size, self.size)), True, False)
+            self.show_image = pygame.transform.flip(pygame.transform.scale(
+                self.original_image, (self.size, self.size)), True, False)
             # print("flip")
-            
+
         else:
-            self.show_image = pygame.transform.scale(self.original_image, (self.size, self.size))
+            self.show_image = pygame.transform.scale(
+                self.original_image, (self.size, self.size))
         # self.flip_image = pygame.transform.flip(
         #     self.show_image, True, False)
 
@@ -315,10 +390,12 @@ class ShowGhost():
         self.speed = new_speed
 
     def flip_image(self, axis=0):
-        if axis==0:
-            self.original_image = pygame.transform.flip(self.original_image, True, False)
-        elif axis==1:
-            self.original_image = pygame.transform.flip(self.original_image, False, True)
+        if axis == 0:
+            self.original_image = pygame.transform.flip(
+                self.original_image, True, False)
+        elif axis == 1:
+            self.original_image = pygame.transform.flip(
+                self.original_image, False, True)
 
         self.detect_change_dir()
 
@@ -329,10 +406,8 @@ class ShowGhost():
     def change_image_from_array(self, img):
         shape = img.shape
         surface = pygame.Surface(shape[0:2], pygame.SRCALPHA, 32)
-        pygame.pixelcopy.array_to_surface(surface, img[:,:,0:3])
+        pygame.pixelcopy.array_to_surface(surface, img[:, :, 0:3])
         surface_alpha = np.array(surface.get_view('A'), copy=False)
-        surface_alpha[:,:] = img[:,:,3]
+        surface_alpha[:, :] = img[:, :, 3]
         self.original_image = surface
         self.detect_change_dir()
-
-

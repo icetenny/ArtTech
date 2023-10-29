@@ -37,10 +37,10 @@ attractor = Attractor()
 
 ghosts = AllGhost(screen=screen, window_size=(WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor, max_ghosts=5)
 
-ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5)
-ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8)
-ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5)
-ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5)
+ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5, effect=1)
+ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8, effect=1)
+ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5, effect=1)
 
 # Main game loop
 running = True

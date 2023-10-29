@@ -16,7 +16,7 @@ import shutil
 # Initialize Pygame
 pygame.init()
 
-video = cv2.VideoCapture("pic/bg2.mp4")
+video = cv2.VideoCapture("pic/VAVSA_BG.mp4")
 success, video_image = video.read()
 fps = video.get(cv2.CAP_PROP_FPS)
 print("fps:", fps)
@@ -42,19 +42,24 @@ start_time = time.time()
 clock = pygame.time.Clock()
 screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
 pygame.display.set_caption("VAVSA 5lloween")
-print(f"Width:{WINDOW_WIDTH} , Height:{WINDOW_HEIGHT}")
+print(f"Width: {WINDOW_WIDTH}, Height: {WINDOW_HEIGHT}")
 
 icon = pygame.image.load("pic/vavsa_logo.png")
 pygame.display.set_icon(icon)
 
 attractor = Attractor()
 
-ghosts = AllGhost(screen=screen, window_size=(WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor, max_ghosts=MAX_GHOST)
+ghosts = AllGhost(screen=screen, window_size=(
+    WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor, max_ghosts=MAX_GHOST)
 
-ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5)
-ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8)
-# ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5)
-# ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5)
+ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5, effect=1)
+ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8, effect=1)
+ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5, effect=2)
+ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=2)
+ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+
 
 
 # Spawning first batch ghost
@@ -63,7 +68,7 @@ for sg in os.listdir(init_folder):
     with open(os.path.join(init_folder, sg), 'r') as json_file:
         # Load the contents of the file into a Python dictionary
         ghost_data = json.load(json_file)
-    if ghost_data.get("done"):
+    if ghost_data.get("task") == "spawn":
         size = ghost_data["size"]
         speed = ghost_data["speed"]
         image = np.array(ghost_data["img"])
@@ -79,7 +84,7 @@ for ag in ags:
     with open(os.path.join(all_folder, ag), 'r') as json_file:
         # Load the contents of the file into a Python dictionary
         ghost_data = json.load(json_file)
-    if ghost_data.get("done"):
+    if ghost_data.get("task") == "spawn":
         size = ghost_data["size"]
         speed = ghost_data["speed"]
         image = np.array(ghost_data["img"])
@@ -88,7 +93,7 @@ for ag in ags:
 # Main game loop
 running = True
 while running:
-    clock.tick(fps) 
+    clock.tick(fps)
 
     # Check spawing folder
     spawning_files = sorted(os.listdir(spawning_folder))
@@ -96,12 +101,12 @@ while running:
     # Check if the source directory is empty
     if spawning_files:
         first_spawning_file = os.path.join(spawning_folder, spawning_files[0])
-            # Load the contents of the file into a Python dictionary
+        # Load the contents of the file into a Python dictionary
         try:
             with open(first_spawning_file, 'r') as json_file:
                 spawning_ghost_data = json.load(json_file)
             json_file.close()
-            if spawning_ghost_data.get("done"):
+            if spawning_ghost_data.get("task") == "spawn":
                 size = spawning_ghost_data["size"]
                 speed = spawning_ghost_data["speed"]
                 image = np.array(spawning_ghost_data["img"])
@@ -113,14 +118,13 @@ while running:
             print(e)
             pass
 
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.MOUSEBUTTONDOWN:
             if event.button == 1:  # Left mouse button
                 attractor.pos = event.pos
-                attractor.is_active = True                
+                attractor.is_active = True
         elif event.type == pygame.MOUSEBUTTONUP:
             if event.button == 1:  # Left mouse button
                 attractor.is_active = False
@@ -141,9 +145,9 @@ while running:
     # Move and draw each ghost
     ghosts.runall()
     # print(ghosts.ghosts[0].status)
-   
-    if attractor:
-        pygame.draw.circle(screen, [(0, 255, 100), (200,0,20)][attractor.is_active], attractor.pos, 8)
+
+    # if attractor:
+    #     pygame.draw.circle(screen, [(0, 255, 100), (200,0,20)][attractor.is_active], attractor.pos, 8)
 
     # Update the display
     # pygame.display.update()

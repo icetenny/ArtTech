@@ -14,27 +14,24 @@ pygame.display.set_caption("Trailing Image")
 clock = pygame.time.Clock()
 fps = 30
 # Load the image with transparency
-image = pygame.image.load("pic/ghost3.png")
+image = pygame.image.load("pic/ghost1.png")
 image = pygame.transform.scale(image, (50, 50))  # Resize the image if needed
 
 # List to store previous positions for the trail effect
 trail_positions = []
 
 
+def color_mask(surface, color, alpha):
+    # Convert the Pygame surface to a NumPy array
+    mask_surface = surface.copy()
+    mask_surface.fill(color)
+    surface_alpha = np.array(mask_surface.get_view('A'), copy=False)
+    surface_alpha[:,:] = pygame.surfarray.array_alpha(surface)
+    return mask_surface
+
+
 def trail_effect(color=(0,0,0), max_alpha=255):
-    width, height = image.get_width(), image.get_height()
-    alpha_array = pygame.surfarray.array_alpha(image)
-    mask_array = np.zeros((*alpha_array.shape,4), dtype="uint8")
-    mask_array[alpha_array > 0] = (*color, 255)
-
-    mask = pygame.surfarray.make_surface(mask_array)
-
-    # Fill the new surface with a black color
-    # mask.fill(color)
-
-    # Use the image as a mask on the black surface
-    # mask.blit(image, (0, 0), special_flags=pygame.BLEND_RGBA_MULT)
-
+    mask = color_mask(image, color=color, alpha=max_alpha)
     for i, (x, y) in enumerate(trail_positions):
         alpha = int(max_alpha * (i / len(trail_positions)))
 
@@ -42,9 +39,6 @@ def trail_effect(color=(0,0,0), max_alpha=255):
         scale_factor = (i / len(trail_positions))
         current_mask = pygame.transform.scale(mask, (int(image.get_width() * scale_factor), int(image.get_height() * scale_factor)))
         current_mask.set_alpha(alpha)
-
-        # trail_image = image.copy()
-        # trail_image.fill((*color, alpha), None, pygame.BLEND_RGBA_MULT)
 
         image_rect = current_mask.get_rect()
         image_rect.center = (x, y)
@@ -72,7 +66,7 @@ while running:
     # Fill the screen with a background color
     screen.fill((0, 255, 255))
 
-    trail_effect(color=(255,0,0), max_alpha=255)
+    trail_effect(color=(0,100,20), max_alpha=255)
 
     
 
