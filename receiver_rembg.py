@@ -13,7 +13,7 @@ import cv2
 
 spawning_folder = "data/ghost/spawning"
 
-# HOST = socket.gethostname()
+HOST = socket.gethostname()
 HOST = "192.168.228.125"
 PORT = 10011
 

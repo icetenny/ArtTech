@@ -101,6 +101,9 @@ class Ghost():
         self.original_size = self.size
         self.wobble_ratio = 0.2
 
+        # Effect 3 : Fading
+
+        # Effect 4 : Spinning
 
     def coord_to_rect(self):
         self.rect.x, self.rect.y = self.coord
@@ -249,7 +252,7 @@ class Ghost():
 
 
 class ShowGhost():
-    def __init__(self, screen, window_size, img="", img_path="", size=50, speed=5):
+    def __init__(self, screen, window_size, img="", img_path="", size=50, speed=5, effect=0):
         self.screen = screen
         self.window_width, self.window_height = window_size
         # self.attractor = AllGhost.attractor
@@ -292,12 +295,29 @@ class ShowGhost():
 
         self.pause_time = 1
 
+        self.effect = effect
+
+        # Effect 1 : Trail
+        self.trail_positions = []
+        self.max_trail = 20
+
+        # Effect 2 : Size wobble
+        self.size_step = 0
+        self.original_size = self.size
+        self.wobble_ratio = 0.2
+
+        # Effect 3 : Fading
+
+        # Effect 4 : Spinning
+
     def coord_to_rect(self):
         self.rect.x, self.rect.y = self.coord
 
     def run(self):
         self.move()
         # self.draw_goal_point()
+        if self.effect == 1:
+            self.trail_effect(max_alpha=128)
         self.draw()
 
     def change_status(self, new_status):
@@ -351,6 +371,16 @@ class ShowGhost():
         self.wobble_x += self.wobble_offset
         self.rect.y = self.coord[1] + \
             math.sin(self.wobble_x) * self.wobble_range
+        
+    def size_wobble(self):
+        self.size_step += 0.1
+        self.size = self.original_size + \
+            math.sin(self.size_step) * (self.original_size * self.wobble_ratio)
+        
+        if self.is_flip:
+            self.show_image = self.scale(self.flip(self.original_image))
+        else:
+            self.show_image = self.scale(self.original_image)
 
     def move(self):
         if self.status == "move_to_goal":
@@ -365,6 +395,11 @@ class ShowGhost():
         self.wobble()
         self.status_counter += 1
 
+        if self.effect == 1:
+            self.append_trail()
+        elif self.effect == 2:
+            self.size_wobble()
+
     def draw(self):
         self.screen.blit(self.show_image, (self.rect.x -
                          self.size//2, self.rect.y - self.size//2))
@@ -374,6 +409,7 @@ class ShowGhost():
 
     def change_size(self, new_size):
         self.size = new_size
+        self.original_size = new_size
         # self.original_image = pygame.transform.scale(self.original_image, (self.size, self.size))
         if self.is_flip:
             self.show_image = pygame.transform.flip(pygame.transform.scale(
@@ -398,6 +434,9 @@ class ShowGhost():
                 self.original_image, False, True)
 
         self.detect_change_dir()
+    
+    def rotate_image(self):
+        self.original_image = pygame.transform.rotate(self.original_image, 270)
 
     def change_image(self, new_path):
         self.original_image = pygame.image.load(new_path)
@@ -411,3 +450,43 @@ class ShowGhost():
         surface_alpha[:, :] = img[:, :, 3]
         self.original_image = surface
         self.detect_change_dir()
+
+    def append_trail(self):
+        self.trail_positions.append((self.rect.x, self.rect.y))
+        if len(self.trail_positions) > self.max_trail:
+            self.trail_positions.pop(0)
+
+    def color_mask(self, color):
+        mask_surface = self.show_image.copy()
+        mask_surface.fill(color)
+        surface_alpha = np.array(mask_surface.get_view('A'), copy=False)
+        surface_alpha[:, :] = pygame.surfarray.array_alpha(self.show_image)
+        return mask_surface
+
+    def trail_effect(self, color=(0, 0, 0), max_alpha=255):
+        mask = self.color_mask(color=color)
+        for i, (x, y) in enumerate(self.trail_positions):
+            alpha = int(max_alpha * (i / len(self.trail_positions)))
+
+            # Scale the image based on the position in the trail
+            scale_factor = (i / len(self.trail_positions))
+            current_mask = pygame.transform.scale(mask, (int(self.show_image.get_width(
+            ) * scale_factor), int(self.show_image.get_height() * scale_factor)))
+            current_mask.set_alpha(alpha)
+
+            image_rect = current_mask.get_rect()
+            image_rect.center = (x, y)
+            self.screen.blit(current_mask, image_rect)
+    def scale(self, surface, size=0):
+        if size == 0:
+            return pygame.transform.scale(surface, (self.size, self.size))
+        else:
+            return pygame.transform.scale(surface, (size, size))
+        
+    def flip(self, surface):
+        return pygame.transform.flip(
+            surface, True, False)
+    
+    def re_effect(self):
+        self.trail_positions = []
+        self.size_step = 0

@@ -40,7 +40,8 @@ start_time = time.time()
 
 # Create the window
 clock = pygame.time.Clock()
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+# screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("VAVSA 5lloween")
 print(f"Width: {WINDOW_WIDTH}, Height: {WINDOW_HEIGHT}")
 
@@ -52,13 +53,13 @@ attractor = Attractor()
 ghosts = AllGhost(screen=screen, window_size=(
     WINDOW_WIDTH, WINDOW_HEIGHT), attractor=attractor, max_ghosts=MAX_GHOST)
 
-ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5, effect=1)
-ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8, effect=1)
-ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
-ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5, effect=2)
-ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=2)
-ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
-ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+# ghosts.add_ghost(img_path="pic/ghost1.png", size=80, speed=5, effect=1)
+# ghosts.add_ghost(img_path="pic/ghost2-1.png", size=75, speed=8, effect=1)
+# ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+# ghosts.add_ghost(img_path="pic/kitty.png", size=90, speed=2.5, effect=2)
+# ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=2)
+# ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
+# ghosts.add_ghost(img_path="pic/ghost3.png", size=85, speed=4.5, effect=1)
 
 
 
@@ -71,8 +72,9 @@ for sg in os.listdir(init_folder):
     if ghost_data.get("task") == "spawn":
         size = ghost_data["size"]
         speed = ghost_data["speed"]
+        effect = ghost_data["effect"]
         image = np.array(ghost_data["img"])
-        ghosts.add_ghost(img=image, size=size, speed=speed)
+        ghosts.add_ghost(img=image, size=size, speed=speed, effect=effect)
 
 if len(os.listdir(all_folder)) <= MAX_GHOST:
     ags = os.listdir(all_folder)
@@ -87,8 +89,9 @@ for ag in ags:
     if ghost_data.get("task") == "spawn":
         size = ghost_data["size"]
         speed = ghost_data["speed"]
+        effect = ghost_data["effect"]
         image = np.array(ghost_data["img"])
-        ghosts.add_ghost(img=image, size=size, speed=speed)
+        ghosts.add_ghost(img=image, size=size, speed=speed, effect=effect)
 
 # Main game loop
 running = True
@@ -109,8 +112,9 @@ while running:
             if spawning_ghost_data.get("task") == "spawn":
                 size = spawning_ghost_data["size"]
                 speed = spawning_ghost_data["speed"]
+                effect = spawning_ghost_data["effect"]
                 image = np.array(spawning_ghost_data["img"])
-                ghosts.add_ghost(img=image, size=size, speed=speed)
+                ghosts.add_ghost(img=image, size=size, speed=speed, effect=effect)
 
                 # Move the first file to the destination directory
                 shutil.move(first_spawning_file, all_folder)
