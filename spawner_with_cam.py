@@ -221,8 +221,6 @@ while running:
                 clicked_id = np_screen.screen[mouse_x, mouse_y]
                 if ui_is_active:
                     if clicked_id == 1:
-                        slider2.set_value(0.5)
-                        slider3.set_value(0.5)
                         print("Button clicked")
                         send_image =  pygame.transform.scale(show_ghost.original_image, (size_show, size_show))
                         data = np.dstack((pygame.surfarray.array3d(send_image), pygame.surfarray.array_alpha(send_image)))
@@ -240,6 +238,8 @@ while running:
                         client_receiver.sendMsg(client_receiver.sock, json.dumps(game_out))
                         client_receiver.clientDisconnect()
 
+                        slider2.set_value(0.5)
+                        slider3.set_value(0.5)
                         
                     elif clicked_id == 4:
                         show_ghost.flip_image(axis=0)
