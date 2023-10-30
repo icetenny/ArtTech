@@ -23,16 +23,20 @@ print("fps:", fps)
 
 
 # Constants for the window
-WINDOW_WIDTH = video.get(3)
-WINDOW_HEIGHT = video.get(4)
-MAX_GHOST = 5
+# WINDOW_WIDTH = video.get(3)
+# WINDOW_HEIGHT = video.get(4)
+# WINDOW_WIDTH = 1920
+# WINDOW_HEIGHT = 1080
+MAX_GHOST = 20
+
+# screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+screen_info = pygame.display.Info()
+WINDOW_WIDTH, WINDOW_HEIGHT = screen_info.current_w, screen_info.current_h
+
 
 init_folder = "data/ghost/init"
 spawning_folder = "data/ghost/spawning"
 all_folder = "data/ghost/all"
-
-# WINDOW_WIDTH = 800
-# WINDOW_HEIGHT = 600
 
 # Colors
 # BACKGROUND = (0, 0, 0)
@@ -41,7 +45,8 @@ start_time = time.time()
 # Create the window
 clock = pygame.time.Clock()
 # screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
-screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE)
+screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.FULLSCREEN)
+# screen = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT), pygame.RESIZABLE)
 pygame.display.set_caption("VAVSA 5lloween")
 print(f"Width: {WINDOW_WIDTH}, Height: {WINDOW_HEIGHT}")
 
@@ -143,6 +148,7 @@ while running:
     else:
         video.set(cv2.CAP_PROP_POS_FRAMES, 0)
         success, video_image = video.read()
+    video_surf = pygame.transform.scale(video_surf, (WINDOW_WIDTH, WINDOW_HEIGHT))
     screen.blit(video_surf, (0, 0))
     # screen.fill(BACKGROUND)
 

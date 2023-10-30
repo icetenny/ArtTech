@@ -277,7 +277,7 @@ show_ghost.goal_points = [
 
 ui_is_active = False
 effect = 0
-max_effect = 2
+max_effect = 5
 
 FONT_SIZE = 300  # Change font size
 FONT_COLOR = (0, 200, 200)  # Change font color to blue

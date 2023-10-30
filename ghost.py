@@ -92,18 +92,21 @@ class Ghost():
 
         self.effect = effect
 
-        # Effect 1 : Trail
+        # Effect 1,2,3 : Trail
         self.trail_positions = []
         self.max_trail = 20
 
-        # Effect 2 : Size wobble
+        # Effect 4 : Size wobble
         self.size_step = 0
         self.original_size = self.size
-        self.wobble_ratio = 0.2
+        self.wobble_ratio = 0.3
 
-        # Effect 3 : Fading
+        # Effect 5 : Fading
+        self.current_alpha = 255
+        self.alpha_increasing = False
+        self.alpha_step = 5
 
-        # Effect 4 : Spinning
+        # Effect 6 : Spinning
 
     def coord_to_rect(self):
         self.rect.x, self.rect.y = self.coord
@@ -112,7 +115,11 @@ class Ghost():
         self.move()
         # self.draw_goal_point()
         if self.effect == 1:
-            self.trail_effect(max_alpha=128)
+            self.trail_effect(color=(0, 0, 0), max_alpha=128)
+        elif self.effect == 2:
+            self.trail_effect(color=(200, 200, 200), max_alpha=128)
+        elif self.effect == 3:
+            self.trail_effect(color=(200, 0, 0), max_alpha=128)
 
         self.draw()
 
@@ -199,16 +206,33 @@ class Ghost():
 
         self.wobble()
 
-        if self.effect == 1:
+        if self.effect in [1, 2, 3]:
             self.append_trail()
-        elif self.effect == 2:
+        elif self.effect == 4:
             self.size_wobble()
+        # elif self.effect == 5:
+        #     self.show_image = pygame.transform.rotate(self.show_image, 2)
 
         self.status_counter += 1
 
     def draw(self):
-        self.screen.blit(self.show_image, (self.rect.x -
-                         self.size//2, self.rect.y - self.size//2))
+        if self.effect == 5:
+            showing_image = self.show_image.copy()
+            showing_image.set_alpha(self.current_alpha)
+            self.screen.blit(showing_image, (self.rect.x -
+                            self.size//2, self.rect.y - self.size//2))
+            if self.alpha_increasing:
+                self.current_alpha += self.alpha_step
+                if self.current_alpha >= 255:
+                    self.alpha_increasing = False
+            else:
+                self.current_alpha -= self.alpha_step
+                if self.current_alpha <= 0:
+                    self.alpha_increasing = True
+        else:
+            self.screen.blit(self.show_image, (self.rect.x -
+                            self.size//2, self.rect.y - self.size//2))
+
 
     def draw_goal_point(self):
         pygame.draw.circle(self.screen, (0, 0, 255), self.goal_point, 5)
@@ -297,18 +321,22 @@ class ShowGhost():
 
         self.effect = effect
 
-        # Effect 1 : Trail
+        # Effect 1,2,3 : Trail
         self.trail_positions = []
         self.max_trail = 20
 
-        # Effect 2 : Size wobble
+        # Effect 4 : Size wobble
         self.size_step = 0
         self.original_size = self.size
-        self.wobble_ratio = 0.2
+        self.wobble_ratio = 0.3
 
-        # Effect 3 : Fading
+        # Effect 5 : Fading
+        self.current_alpha = 255
+        self.alpha_increasing = False
+        self.alpha_step = 5
 
-        # Effect 4 : Spinning
+        # Effect 6 : Spinning
+
 
     def coord_to_rect(self):
         self.rect.x, self.rect.y = self.coord
@@ -317,7 +345,11 @@ class ShowGhost():
         self.move()
         # self.draw_goal_point()
         if self.effect == 1:
-            self.trail_effect(max_alpha=128)
+            self.trail_effect(color=(0, 0, 0), max_alpha=128)
+        elif self.effect == 2:
+            self.trail_effect(color=(200, 200, 200), max_alpha=128)
+        elif self.effect == 3:
+            self.trail_effect(color=(200, 0, 0), max_alpha=128)
         self.draw()
 
     def change_status(self, new_status):
@@ -395,14 +427,28 @@ class ShowGhost():
         self.wobble()
         self.status_counter += 1
 
-        if self.effect == 1:
+        if self.effect in [1, 2, 3]:
             self.append_trail()
-        elif self.effect == 2:
+        elif self.effect == 4:
             self.size_wobble()
 
     def draw(self):
-        self.screen.blit(self.show_image, (self.rect.x -
-                         self.size//2, self.rect.y - self.size//2))
+        if self.effect == 5:
+            showing_image = self.show_image.copy()
+            showing_image.set_alpha(self.current_alpha)
+            self.screen.blit(showing_image, (self.rect.x -
+                            self.size//2, self.rect.y - self.size//2))
+            if self.alpha_increasing:
+                self.current_alpha += self.alpha_step
+                if self.current_alpha >= 255:
+                    self.alpha_increasing = False
+            else:
+                self.current_alpha -= self.alpha_step
+                if self.current_alpha <= 0:
+                    self.alpha_increasing = True
+        else:
+            self.screen.blit(self.show_image, (self.rect.x -
+                            self.size//2, self.rect.y - self.size//2))
 
     def draw_goal_point(self):
         pygame.draw.circle(self.screen, (0, 0, 255), self.goal_point, 5)
